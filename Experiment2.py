@@ -9,20 +9,20 @@ np.random.seed(123)
 
 # Experiment 2: ring shape distribution
 
-def ring_shaped_distribution(x, y):
-    return np.exp(-0.2 * (x**2 + y**2) - 0.1 * (x**2 - y**2))
+def u_shaped_distribution(x, y):
+    return 0.5 * (x**2 + y**2) - 0.5 * (x**2 - y**2)**2
 
-def log_ring_shaped_distribution(x, y):
-    return -0.2 * (x**2 + y**2) - 0.1 * (x**2 - y**2)
+def log_u_shaped_distribution(x, y):
+    return -0.5 * (x**2 + y**2) - 0.5 * (x**2 - y**2)**2
 
-def grad_log_ring_shaped_distribution(x, y):
-    return np.array([-0.4 * x - 0.2 * x, -0.4 * y + 0.2 * y])
+def grad_log_u_shaped_distribution(x, y):
+    return np.array([-x - 2 * x * (x**2 - y**2), -y - 2 * y * (x**2 - y**2)])
 
-logp = lambda theta: log_ring_shaped_distribution(theta[0], theta[1])
-U = lambda theta: -logp(theta)
-gradU = lambda theta: -grad_log_ring_shaped_distribution(theta[0], theta[1])
+logp = lambda x: log_u_shaped_distribution(x[0], x[1])
+U = lambda x: u_shaped_distribution(x[0], x[1])
+gradU = lambda x: grad_log_u_shaped_distribution(x[0], x[1])
 
-T = 10000
+T = 2000
 burnin = 1000
 
 theta0 = np.array([0, 0])
@@ -35,7 +35,7 @@ thetas_HMC = HMC(U, gradU, theta0, L=10, eps=0.1, scale=1, T=T, burnin=burnin, t
 x = np.linspace(-3, 3, 100)
 y = np.linspace(-3, 3, 100)
 X, Y = np.meshgrid(x, y)
-Z = ring_shaped_distribution(X, Y)
+Z = u_shaped_distribution(X, Y)
 
 fig, ax = plt.subplots(1, 3, figsize=(15, 5))
 ax[0].contour(X, Y, Z)
