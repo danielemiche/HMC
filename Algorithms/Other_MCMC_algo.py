@@ -37,11 +37,29 @@ def Gibbs_within_MH_rand(logp, theta0, scale = 1, T=10000, burnin=1000, thin=1):
             thetas[i] = thetas[i-1]            
     return thetas[::thin, :]
 
+def Gibbs_within_MH_seq(logp, theta0, scale = 1, T=10000, burnin=1000, thin=1):
+    nparams = len(theta0)
+    thetas = np.zeros((T+burnin, nparams * nparams))
+    thetas[0] = theta0
+    logp0 = logp(theta0)
+    for _, i in enumerate(tqdm(range(1, T+burnin))):
+        for k in range(nparams):
+            z = thetas[i-1].copy()
+            z[k] = sps.norm(thetas[i-1][k], scale=scale).rvs(1)
+            logpz = logp(z)
+            u = sps.uniform().rvs(1)
+            if np.log(u)<logpz-logp0:
+                thetas[i + k] = z
+                logp0 = logpz
+            else:
+                thetas[i] = thetas[i-1]
+    return thetas[::thin, :]
+
 def ULA(gradU, theta0, gamma=0.1, T=10000, burnin=1000, thin=1):
     nparams = len(theta0)
     thetas = np.zeros((T+burnin, nparams))
     thetas[0] = theta0
-    for j, i in enumerate(tqdm(range(1, T+burnin))):
+    for _, i in enumerate(tqdm(range(1, T+burnin))):
         z = sps.multivariate_normal(np.zeros(nparams), np.eye(nparams)).rvs(1)
         thetas[i] = thetas[i-1] - gamma * gradU(thetas[i-1]) + np.sqrt(2*gamma)*z
     thetas = thetas[burnin:, :]
@@ -53,7 +71,7 @@ def MALA(logp, gradU, theta0, gamma=0.1, T=10000, burnin=1000, thin=1):
     thetas[0] = theta0
     grad0 = gradU(theta0)
     logp0 = logp(theta0)
-    for j, i in enumerate(tqdm(range(1, T+burnin))):
+    for _, i in enumerate(tqdm(range(1, T+burnin))):
         mu = thetas[i-1] - gamma * grad0
         sigma = np.sqrt(2*gamma)
         z = sps.multivariate_normal(mu, np.eye(nparams)*sigma**2).rvs(1)
