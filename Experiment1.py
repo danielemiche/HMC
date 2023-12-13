@@ -3,14 +3,17 @@ import matplotlib.pyplot as plt
 from Algorithms.HMC import *
 from Algorithms.Other_MCMC_algo import *
 import scipy.stats as sps
+# import scipy.special as spsp
 from scipy.optimize import minimize
 import pandas as pd
 import seaborn as sns
 import seaborn as sns
 
 np.random.seed(123)
-# Experiment 1: Bayesian Logistic Regression 
+# Bayesian Logistic Regression 
 
+# def log_prior(theta):
+#     return -0.5 * np.sum(theta**2)
 s = 10
 def log_prior(theta):
     return sps.norm(0, s).logpdf(theta).sum()
@@ -100,47 +103,6 @@ ax[0, 0].legend()
 plt.tight_layout()
 plt.savefig('hist_log.png')
 plt.show()
-
-# Plot the traceplots of the estimates for the beta
-fig, ax = plt.subplots(3, 3, figsize=(15, 5))
-for i in range(3):
-    ax[i, 0].plot(betas_HMC[:, i])
-    ax[i, 1].plot(betas_MH[:, i])
-    ax[i, 2].plot(betas_Gibbs[:, i])
-    ax[i, 0].axhline(y=betas[i], color='r', linestyle='-', label='True')
-    ax[i, 1].axhline(y=betas[i], color='r', linestyle='-', label='True')
-    ax[i, 2].axhline(y=betas[i], color='r', linestyle='-', label='True')
-    ax[i, 0].axhline(y=MLE[i], color='g', linestyle='--', label='MLE', alpha=0.5)
-    ax[i, 1].axhline(y=MLE[i], color='g', linestyle='--', label='MLE', alpha=0.5)
-    ax[i, 2].axhline(y=MLE[i], color='g', linestyle='--', label='MLE', alpha=0.5)
-    ax[i, 0].set_ylabel('Beta {}'.format(i+1))
-    ax[i, 1].set_yticklabels([])
-    ax[i, 2].set_yticklabels([])
-ax[0, 0].set_title('HMC')
-ax[0, 1].set_title('RH')
-ax[0, 2].set_title('RHWG')
-ax[0, 0].legend()
-plt.tight_layout()
-plt.savefig('trace_log.png')
-plt.show()
-
-# Plot the autocorrelation of the estimates for the beta
-fig, ax = plt.subplots(3, 3, figsize=(15, 5))
-for i in range(3):
-    ax[i, 0].acorr(betas_HMC[:, i] - np.mean(betas_HMC[:, i]), maxlags=100)
-    ax[i, 1].acorr(betas_MH[:, i] - np.mean(betas_MH[:, i]), maxlags=100)
-    ax[i, 2].acorr(betas_Gibbs[:, i] - np.mean(betas_Gibbs[:, i]), maxlags=100)
-    ax[i, 0].set_ylabel('Beta {}'.format(i+1))
-    ax[i, 1].set_yticklabels([])
-    ax[i, 2].set_yticklabels([])
-ax[0, 0].set_title('HMC')
-ax[0, 1].set_title('RH')
-ax[0, 2].set_title('RHWG')
-plt.tight_layout()
-plt.savefig('autocorr_log.png')
-plt.show()
-
-
 
 
 
