@@ -5,48 +5,67 @@ from Algorithms.Other_MCMC_algo import *
 from scipy.optimize import minimize
 import seaborn as sns
 
-np.random.seed(123)
+# Toy example 2: 2D distributions
 
-# Experiment 2: ring shape distribution
+def log_u_shaped_distr(theta1, theta2):
+    return -theta1**2 + theta2**2 - 0.5 * theta2**4
 
-def u_shaped_distribution(x, y):
-    return 0.5 * (x**2 + y**2) - 0.5 * (x**2 - y**2)**2
+def log_u_shaped_distr_grad(theta1, theta2):
+    return np.array([-2 * theta1, 2 * theta2 - 2 * theta2**3])
 
-def log_u_shaped_distribution(x, y):
-    return -0.5 * (x**2 + y**2) - 0.5 * (x**2 - y**2)**2
-
-def grad_log_u_shaped_distribution(x, y):
-    return np.array([-x - 2 * x * (x**2 - y**2), -y - 2 * y * (x**2 - y**2)])
-
-logp = lambda x: log_u_shaped_distribution(x[0], x[1])
-U = lambda x: u_shaped_distribution(x[0], x[1])
-gradU = lambda x: grad_log_u_shaped_distribution(x[0], x[1])
+logp = lambda theta: log_u_shaped_distr(theta[0], theta[1])
+U = lambda theta: -logp(theta)
+gradU = lambda theta: -log_u_shaped_distr_grad(theta[0], theta[1])
 
 T = 2000
 burnin = 1000
 
-theta0 = np.array([0, 0])
+thetas_MH = Metropolis_Hastings(logp, np.zeros(2), scale=1, T=T, burnin=burnin, thin=1)
+thetas_Gibbs = Gibbs_within_MH_rand(logp, np.zeros(2), scale=1, T=T, burnin=burnin, thin=1)
+thetas_HMC = HMC(U, gradU, np.ones(2), L=20, eps=0.01, scale=1, T=T, burnin=burnin, thin=1)
 
-thetas_MH = Metropolis_Hastings(logp, theta0, scale=1, T=T, burnin=burnin, thin=1)
-thetas_Gibbs = Gibbs_within_MH_rand(logp, theta0, scale=1, T=T, burnin=burnin, thin=1)
-thetas_HMC = HMC(U, gradU, theta0, L=10, eps=0.1, scale=1, T=T, burnin=burnin, thin=1)
-
-# Plot the trajectory of the Markov Chain for the three algorithms in a contour plot of the distribution
 x = np.linspace(-3, 3, 100)
 y = np.linspace(-3, 3, 100)
 X, Y = np.meshgrid(x, y)
-Z = u_shaped_distribution(X, Y)
+Z = np.exp(log_u_shaped_distr(X, Y))
 
-fig, ax = plt.subplots(1, 3, figsize=(15, 5))
-ax[0].contour(X, Y, Z)
-ax[0].plot(thetas_HMC[:, 0], thetas_HMC[:, 1], color='r')
-ax[0].set_title('HMC')
-ax[1].contour(X, Y, Z)
-ax[1].plot(thetas_MH[:, 0], thetas_MH[:, 1], color='r')
-ax[1].set_title('RH')
-ax[2].contour(X, Y, Z)
-ax[2].plot(thetas_Gibbs[:, 0], thetas_Gibbs[:, 1], color='r')
-ax[2].set_title('RHWG')
+subplots = 3
+
+plt.figure(figsize=(15, 5))
+plt.subplot(1, subplots, 1)
+
+
+plt.contour(X, Y, Z)
+plt.scatter(thetas_MH[:, 0], thetas_MH[:, 1], s=1, color='red', alpha=0.5, label='MH')
+plt.legend()
+plt.subplot(1, subplots, 2)
+plt.contour(X, Y, Z)
+plt.scatter(thetas_Gibbs[:, 0], thetas_Gibbs[:, 1], s=1, color='green', alpha=0.5, label='Gibbs')
+plt.legend()
+plt.subplot(1, subplots, 3)
+plt.contour(X, Y, Z)
+plt.scatter(thetas_HMC[:, 0], thetas_HMC[:, 1], s=1, color='blue', alpha=0.5, label='HMC')
+plt.legend()
 plt.tight_layout()
-plt.savefig('contour.png')
 plt.show()
+
+
+# plt.contour(X, Y, Z)
+# plt.scatter(thetas_MH[:, 0], thetas_MH[:, 1], s=1, color='red', alpha=0.5, label='MH')
+# plt.legend()
+# plt.show()
+
+# plt.contour(X, Y, Z)
+
+# plt.scatter(thetas_Gibbs[:, 0], thetas_Gibbs[:, 1], s=1, color='green', alpha=0.5, label='Gibbs')
+# plt.show()
+
+# plt.contour(X, Y, Z)
+# plt.scatter(thetas_HMC[:, 0], thetas_HMC[:, 1], s=1, color='blue', alpha=0.5, label='HMC')
+# plt.show()
+
+
+
+
+
+
