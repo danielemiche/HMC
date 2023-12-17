@@ -29,16 +29,3 @@ def HMC(U, gradU, theta0, L, eps, scale=1, T=10000, burnin=1000, thin=1):
     thetas = thetas[burnin:, :]
     return thetas[::thin, :]
 
-
-# Utils 
-def find_MAP(sample):
-    if len(sample.shape)==1:
-        h = np.histogram(sample, bins = 50)
-        MAP = h[1][np.argmax(h[0])]
-    else:
-        MAP = np.zeros(sample.shape[1])
-        for i in range(sample.shape[1]):
-            h = np.histogram(sample[:, i], bins = 50)
-            MAP[i] = h[1][np.argmax(h[0])]
-    return MAP
-

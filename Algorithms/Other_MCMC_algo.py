@@ -37,24 +37,6 @@ def Gibbs_within_MH_rand(logp, theta0, scale = 1, T=10000, burnin=1000, thin=1):
             thetas[i] = thetas[i-1]            
     return thetas[::thin, :]
 
-def Gibbs_within_MH_seq(logp, theta0, scale = 1, T=10000, burnin=1000, thin=1):
-    nparams = len(theta0)
-    thetas = np.zeros((T+burnin, nparams * nparams))
-    thetas[0] = theta0
-    logp0 = logp(theta0)
-    for _, i in enumerate(tqdm(range(1, T+burnin))):
-        for k in range(nparams):
-            z = thetas[i-1].copy()
-            z[k] = sps.norm(thetas[i-1][k], scale=scale).rvs(1)
-            logpz = logp(z)
-            u = sps.uniform().rvs(1)
-            if np.log(u)<logpz-logp0:
-                thetas[i + k] = z
-                logp0 = logpz
-            else:
-                thetas[i] = thetas[i-1]
-    return thetas[::thin, :]
-
 def ULA(gradU, theta0, gamma=0.1, T=10000, burnin=1000, thin=1):
     nparams = len(theta0)
     thetas = np.zeros((T+burnin, nparams))
@@ -88,3 +70,15 @@ def MALA(logp, gradU, theta0, gamma=0.1, T=10000, burnin=1000, thin=1):
             thetas[i] = thetas[i-1]
     thetas = thetas[burnin:, :]
     return thetas[::thin, :]
+
+# Utils 
+def find_MAP(sample):
+    if len(sample.shape)==1:
+        h = np.histogram(sample, bins = 50)
+        MAP = h[1][np.argmax(h[0])]
+    else:
+        MAP = np.zeros(sample.shape[1])
+        for i in range(sample.shape[1]):
+            h = np.histogram(sample[:, i], bins = 50)
+            MAP[i] = h[1][np.argmax(h[0])]
+    return MAP

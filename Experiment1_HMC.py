@@ -6,7 +6,6 @@ import scipy.stats as sps
 from scipy.optimize import minimize
 import pandas as pd
 import seaborn as sns
-import seaborn as sns
 
 np.random.seed(123)
 # Experiment 1: Bayesian Logistic Regression 
