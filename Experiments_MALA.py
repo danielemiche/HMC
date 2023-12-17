@@ -75,7 +75,7 @@ elif experiment_number == 2:
         return dlog_prior(theta) + dlog_likelihood(theta, X, y)
 
     num_dims = 5
-    n = 50
+    n = 10
 
     X = np.random.randn(n, num_dims)
     X = np.hstack((np.ones((n, 1)), X))
@@ -86,24 +86,26 @@ elif experiment_number == 2:
     U = lambda theta: -logp(theta)
     gradU = lambda theta: -dlog_posterior(theta, X, y)
 
-    num_samples = 10000
+    num_samples = 8000
     burnin = 1000
 
     betas_mh = Metropolis_Hastings(logp, np.zeros(num_dims + 1), scale = 1, T=num_samples, burnin=burnin, thin=1)
     betas_ula = ULA(gradU, np.zeros(num_dims + 1), gamma=0.001, T=num_samples, burnin=burnin, thin=1)
     betas_mala = MALA(logp, gradU, np.zeros(num_dims + 1), gamma=0.001, T=num_samples, burnin=burnin, thin=1)
 
-    MLE = minimize(lambda theta: -log_likelihood(theta, X, y), np.zeros(num_dims + 1)).x
+    OLS = np.linalg.inv(X.T @ X) @ X.T @ y
+    Ridge = np.linalg.inv(X.T @ X + np.eye(num_dims + 1)) @ X.T @ y
 
     # print a nice table containing all the estimates for the betas
-    table = np.zeros((num_dims + 1, 5))
+    table = np.zeros((num_dims + 1, 6))
     table[:, 0] = betas
-    table[:, 1] = MLE
-    table[:, 2] = np.mean(betas_mh, axis=0)
-    table[:, 3] = np.mean(betas_ula, axis=0)
-    table[:, 4] = np.mean(betas_mala, axis=0)
+    table[:, 1] = OLS
+    table[:, 2] = Ridge
+    table[:, 3] = np.mean(betas_mh, axis=0)
+    table[:, 4] = np.mean(betas_ula, axis=0)
+    table[:, 5] = np.mean(betas_mala, axis=0)
     
-    table = pd.DataFrame(table, columns=['True', 'MLE', 'MH', 'ULA', 'MALA'])
+    table = pd.DataFrame(table, columns=['True', 'OLS', 'Ridge', 'MH', 'ULA', 'MALA'])
     table.index = ['$beta_{}$'.format(i+1) for i in range(num_dims + 1)]
     print(table)
 
@@ -114,9 +116,32 @@ elif experiment_number == 2:
         sns.histplot(betas_mh[:, i], bins=50, kde=True, ax=ax[i, 0])
         sns.histplot(betas_ula[:, i], bins=50, kde=True, ax=ax[i, 1])
         sns.histplot(betas_mala[:, i], bins=50, kde=True, ax=ax[i, 2])
+    
+    for i in range(3):
+        ax[i, 0].set_ylabel('Beta {}'.format(i+1))
+        ax[i, 1].set_yticklabels([])
+        ax[i, 2].set_yticklabels([])
 
+    for i in range(3):
+        ax[i, 0].axvline(x=betas[i], color='r', linestyle='-', label='True')
+        ax[i, 1].axvline(x=betas[i], color='r', linestyle='-', label='True')
+        ax[i, 2].axvline(x=betas[i], color='r', linestyle='-', label='True')
+        ax[i, 0].axvline(x=OLS[i], color='g', linestyle='--', label='OLS', alpha=0.5)
+        ax[i, 1].axvline(x=OLS[i], color='g', linestyle='--', label='OLS', alpha=0.5)
+        ax[i, 2].axvline(x=OLS[i], color='g', linestyle='--', label='OLS', alpha=0.5)
+        ax[i, 0].axvline(x=Ridge[i], color='m', linestyle='--', label='Ridge', alpha=0.5)
+        ax[i, 1].axvline(x=Ridge[i], color='m', linestyle='--', label='Ridge', alpha=0.5)
+        ax[i, 2].axvline(x=Ridge[i], color='m', linestyle='--', label='Ridge', alpha=0.5)
+
+
+
+    ax[0, 0].set_title('MH')
+    ax[0, 1].set_title('ULA')
+    ax[0, 2].set_title('MALA')
+
+    ax[0, 0].legend()
     plt.tight_layout()
-
+    plt.savefig('hist_lin_13.png')
     plt.show()
 
     fig, ax = plt.subplots(3, 3, figsize=(15, 5))
@@ -126,6 +151,29 @@ elif experiment_number == 2:
         sns.histplot(betas_ula[:, i+3], bins=50, kde=True, ax=ax[i, 1])
         sns.histplot(betas_mala[:, i+3], bins=50, kde=True, ax=ax[i, 2])
 
+    for i in range(3):
+        ax[i, 0].set_ylabel('Beta {}'.format(i+4))
+        ax[i, 1].set_yticklabels([])
+        ax[i, 2].set_yticklabels([])
+
+    for i in range(3):
+        j = i + 3
+        ax[i, 0].axvline(x=betas[j], color='r', linestyle='-', label='True')
+        ax[i, 1].axvline(x=betas[j], color='r', linestyle='-', label='True')
+        ax[i, 2].axvline(x=betas[j], color='r', linestyle='-', label='True')
+        ax[i, 0].axvline(x=OLS[j], color='g', linestyle='--', label='MLE', alpha=0.5)
+        ax[i, 1].axvline(x=OLS[j], color='g', linestyle='--', label='MLE', alpha=0.5)
+        ax[i, 2].axvline(x=OLS[j], color='g', linestyle='--', label='MLE', alpha=0.5)
+        ax[i, 0].axvline(x=Ridge[j], color='m', linestyle='--', label='Ridge', alpha=0.5)
+        ax[i, 1].axvline(x=Ridge[j], color='m', linestyle='--', label='Ridge', alpha=0.5)
+        ax[i, 2].axvline(x=Ridge[j], color='m', linestyle='--', label='Ridge', alpha=0.5)
+
+    ax[0, 0].set_title('MH')
+    ax[0, 1].set_title('ULA')
+    ax[0, 2].set_title('MALA')
+
+    ax[0, 0].legend()
     plt.tight_layout()
+    plt.savefig('hist_lin_36.png')
 
     plt.show()
