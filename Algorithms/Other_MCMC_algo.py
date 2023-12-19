@@ -17,7 +17,7 @@ def Metropolis_Hastings(logp, theta0, scale = 1, T=10000, burnin=1000, thin=1):
             logp0 = logpz
         else:
             thetas[i] = thetas[i-1]            
-    return thetas[::thin, :]
+    return thetas[burnin::thin, :]
 
 def Gibbs_within_MH_rand(logp, theta0, scale = 1, T=10000, burnin=1000, thin=1):
     nparams = len(theta0)
@@ -35,7 +35,7 @@ def Gibbs_within_MH_rand(logp, theta0, scale = 1, T=10000, burnin=1000, thin=1):
             logp0 = logpz
         else:
             thetas[i] = thetas[i-1]            
-    return thetas[::thin, :]
+    return thetas[burnin::thin, :]
 
 def ULA(gradU, theta0, gamma=0.1, T=10000, burnin=1000, thin=1):
     nparams = len(theta0)
